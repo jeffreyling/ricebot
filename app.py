@@ -25,7 +25,7 @@ class RiceRequest(db.Model):
         self.amount = amount
 
     def __repr__(self):
-        return "({}, {} cups)".format(name, amount)
+        return "({}, {} cups)".format(self.name, self.amount)
 
 
 def get_user_first_name(sender_id):
