@@ -6,10 +6,10 @@ from datetime import datetime
 import requests
 from flask import Flask, request
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABSE_URI'] = os.environ['DATABSE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
 @app.route('/', methods=['GET'])
