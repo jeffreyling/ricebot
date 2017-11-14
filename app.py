@@ -6,9 +6,11 @@ from datetime import datetime
 import requests
 from flask import Flask, request
 
-app = Flask(__name__)
+from flask.ext.sqlalchemy import SQLAlchemy
 
-RICE = dict()
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABSE_URI'] = os.environ['DATABSE_URL']
+db = SQLAlchemy(app)
 
 @app.route('/', methods=['GET'])
 def verify():
@@ -39,20 +41,24 @@ def webhook():
 
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
-                    message_text = messaging_event["message"]["text"]  # the message's text
-                    if message_text == "rice":
-                        send_message(sender_id, "got it!")
-                        RICE[sender_id] = True
-                    elif message_text == "clear":
-                        try:
-                            del RICE[sender_id]
-                            send_message(sender_id, "okay, you don't want rice")
-                        except:
-                            send_message(sender_id, "you didn't request rice today")
-                    elif message_text == "show":
-                        send_message(sender_id, "these people want rice: {}".format(RICE.keys()))
-                    else:
-                        send_message(sender_id, "I don't understand")
+                    if "text" in messaging_event["message"]:  # prevent emojis from crashing us
+                        message_text = messaging_event["message"]["text"]  # the message's text
+                        if message_text == "rice":
+                            if sender_id in RICE:
+                                send_message(sender_id, "you already requested rice")
+                            else:
+                                send_message(sender_id, "got it!")
+                                RICE[sender_id] = True
+                        elif message_text == "clear":
+                            if sender_id in RICE:
+                                del RICE[sender_id]
+                                send_message(sender_id, "okay, you don't want rice")
+                            else:
+                                send_message(sender_id, "you didn't request rice today")
+                        elif message_text == "show":
+                            send_message(sender_id, "these people want rice: {}".format(RICE.keys()))
+                        else:
+                            send_message(sender_id, "I don't understand")
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
