@@ -24,6 +24,9 @@ class RiceRequest(db.Model):
         self.name = name
         self.amount = amount
 
+    def __repr__(self):
+        return "({}, {} cups)".format(name, amount)
+
 
 def get_user_first_name(sender_id):
     """ Retrieves first name using Graph API """
@@ -78,13 +81,15 @@ def webhook():
                         elif re.match("rice \d+(\.\d+)?", message_text):
                             amt = float(message_text.strip().split()[-1])
                             prev_req = RiceRequest.query.filter_by(name=first_name).first()
-                            rice_req = RiceRequest(first_name, amt)
                             if prev_req:
                                 db.session.delete(prev_req)
+                                db.session.commit()
+                                rice_req = RiceRequest(first_name, amt)
                                 db.session.add(rice_req)
                                 db.session.commit()
                                 send_message(sender_id, "new request: {} cups".format(amt))
                             else:
+                                rice_req = RiceRequest(first_name, amt)
                                 db.session.add(rice_req)
                                 db.session.commit()
                                 send_message(sender_id, "got it! {} cups".format(amt))
