@@ -19,6 +19,7 @@ class RiceRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True)
     amount = db.Column(db.Float())  # in cups
+    created_date = db.Column(db.DateTime, default=datetime.today)
 
     def __init__(self, name, amount=0.):
         self.name = name
@@ -100,7 +101,12 @@ def webhook():
                             else:
                                 send_message(sender_id, "you didn't request rice yet")
                         elif message_text == "show":
-                            send_message(sender_id, "these people want rice: {}".format(RiceRequest.query.all()))
+                            today = datetime.today()
+                            query_set = RiceRequest.query.filter(
+                                    RiceRequest.created_date.day == today.day,
+                                    RiceRequest.created_date.month == today.month,
+                                    RiceRequest.created_date.year == today.year)
+                            send_message(sender_id, "these people want rice today: {}".format(query_set))
                         else:
                             send_message(sender_id, "I don't understand")
 
