@@ -26,7 +26,8 @@ class RiceRequest(db.Model):
 
 def get_user_first_name(sender_id):
     """ Retrieves first name using Graph API """
-    request = "https://graph.facebook.com/v2.6/{}?fields=first_name&access_token={}".format(sender_id, os.environ["VERIFY_TOKEN"])
+    log("{} {}".format(sender_id, os.environ["PAGE_ACCESS_TOKEN"]))
+    request = "https://graph.facebook.com/v2.6/{}?fields=first_name&access_token={}".format(sender_id, os.environ["PAGE_ACCESS_TOKEN"])
     response = urllib2.urlopen(request)
     data = json.load(response)
     log(data)
