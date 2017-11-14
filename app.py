@@ -73,9 +73,15 @@ def webhook():
                             amt = float(message_text.split())
                             rice_req = RiceRequest('nmae???', amt)
                             if RiceRequest.query.filter_by(name=asdf).first():
-                            db.session.add(rice_req)
-                            db.session.commit()
-                            send_message(sender_id, "got it! {} cups".format(amt))
+                                # Overwrite somehow
+                                db.session.add(rice_req)
+                                db.session.commit()
+                                send_message(sender_id, "got it! {} cups".format(amt))
+                            else:
+                                db.session.add(rice_req)
+                                db.session.commit()
+                                send_message(sender_id, "got it! {} cups".format(amt))
+
                         elif message_text == "clear":
                             rice_req = RiceRequest.query.filter_by(name=asdf).first()
                             if rice_req:
