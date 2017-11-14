@@ -70,9 +70,13 @@ def webhook():
                     if "text" in messaging_event["message"]:  # prevent emojis from crashing us
                         message_text = messaging_event["message"]["text"]  # the message's text
                         if message_text == "help":
-                            send_message(sender_id, "Send \"rice 1.5\" to post 1.5 cups of rice. Send \"clear\" to clear your request. Send \"show\" to see who has requested rice so far.")
+                            send_message(sender_id,
+                            "Send \"rice 1.5\" to post 1.5 cups of rice.\n
+                                Send \"clear\" to clear your request.\n
+                                Send \"show\" to see who has requested rice so far.\n
+                                You can clear your last request with a new one too.")
                         elif re.match("rice \d+(\.\d+)?", message_text):
-                            amt = float(message_text.split())
+                            amt = float(message_text.strip().split()[-1])
                             prev_req = RiceRequest.query.filter_by(name=first_name).first()
                             rice_req = RiceRequest(first_name, amt)
                             if prev_req:
