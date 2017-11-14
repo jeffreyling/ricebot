@@ -3,6 +3,7 @@ import sys
 import json
 from datetime import datetime
 import urllib2
+import re
 
 import requests
 from flask import Flask, request
@@ -26,11 +27,11 @@ class RiceRequest(db.Model):
 
 def get_user_first_name(sender_id):
     """ Retrieves first name using Graph API """
-    log("{} {}".format(sender_id, os.environ["PAGE_ACCESS_TOKEN"]))
     request = "https://graph.facebook.com/v2.6/{}?fields=first_name&access_token={}".format(sender_id, os.environ["PAGE_ACCESS_TOKEN"])
     response = urllib2.urlopen(request)
     data = json.load(response)
-    log(data)
+
+    return data["first_name"]
 
 
 @app.route('/', methods=['GET'])
@@ -63,7 +64,7 @@ def webhook():
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
 
-                    name = get_user_first_name(sender_id)  # poster's first name
+                    first_name = get_user_first_name(sender_id)  # poster's first name
 
 
                     if "text" in messaging_event["message"]:  # prevent emojis from crashing us
@@ -72,12 +73,13 @@ def webhook():
                             send_message(sender_id, "Send \"rice 1.5\" to post 1.5 cups of rice. Send \"clear\" to clear your request. Send \"show\" to see who has requested rice so far.")
                         elif re.match("rice \d+(\.\d+)?", message_text):
                             amt = float(message_text.split())
-                            rice_req = RiceRequest('nmae???', amt)
-                            if RiceRequest.query.filter_by(name=asdf).first():
-                                # Overwrite somehow
+                            prev_req = RiceRequest.query.filter_by(name=first_name).first()
+                            rice_req = RiceRequest(first_name, amt)
+                            if prev_req:
+                                db.session.delete(prev_req)
                                 db.session.add(rice_req)
                                 db.session.commit()
-                                send_message(sender_id, "got it! {} cups".format(amt))
+                                send_message(sender_id, "new request: {} cups".format(amt))
                             else:
                                 db.session.add(rice_req)
                                 db.session.commit()
