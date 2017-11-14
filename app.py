@@ -102,7 +102,7 @@ def webhook():
                                 send_message(sender_id, "you didn't request rice yet")
                         elif message_text == "show":
                             today = datetime.today().date()
-                            query_set = RiceRequest.query.filter(RiceRequest.created_date >= today)
+                            query_set = RiceRequest.query.filter(RiceRequest.created_date >= today).all()
                             send_message(sender_id, "these people want rice today: {}".format(query_set))
                         else:
                             send_message(sender_id, "I don't understand")
