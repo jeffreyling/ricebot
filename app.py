@@ -95,13 +95,13 @@ def webhook():
                                 send_message(sender_id, "got it! {} cups".format(amt))
 
                         elif message_text == "clear":
-                            rice_req = RiceRequest.query.filter_by(name=asdf).first()
+                            rice_req = RiceRequest.query.filter_by(name=first_name).first()
                             if rice_req:
                                 db.session.delete(rice_req)
                                 db.session.commit()
                                 send_message(sender_id, "your request was cleared")
                             else:
-                                send_message(sender_id, "you didn't request rice today")
+                                send_message(sender_id, "you didn't request rice yet")
                         elif message_text == "show":
                             send_message(sender_id, "these people want rice: {}".format(RiceRequest.query.all()))
                         else:
