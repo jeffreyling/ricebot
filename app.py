@@ -2,6 +2,7 @@ import os
 import sys
 import json
 from datetime import datetime
+import urllib2
 
 import requests
 from flask import Flask, request
@@ -12,6 +13,24 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+class RiceRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), unique=True)
+    amount = db.Column(db.Float())  # in cups
+
+    def __init__(self, name, amount=0.):
+        self.name = name
+        self.amount = amount
+
+
+def get_user_first_name(sender_id):
+    """ Retrieves first name using Graph API """
+    request = "https://graph.facebook.com/v2.6/{}?fields=first_name&access_token={}".format(sender_id, os.environ["VERIFY_TOKEN"])
+    response = urllib2.urlopen(request)
+    data = json.load(response)
+    log(data)
+
 
 @app.route('/', methods=['GET'])
 def verify():
@@ -42,22 +61,31 @@ def webhook():
 
                     sender_id = messaging_event["sender"]["id"]        # the facebook ID of the person sending you the message
                     recipient_id = messaging_event["recipient"]["id"]  # the recipient's ID, which should be your page's facebook ID
+
+                    name = get_user_first_name(sender_id)  # poster's first name
+
+
                     if "text" in messaging_event["message"]:  # prevent emojis from crashing us
                         message_text = messaging_event["message"]["text"]  # the message's text
-                        if message_text == "rice":
-                            if sender_id in RICE:
-                                send_message(sender_id, "you already requested rice")
-                            else:
-                                send_message(sender_id, "got it!")
-                                RICE[sender_id] = True
+                        if message_text == "help":
+                            send_message(sender_id, "Send \"rice 1.5\" to post 1.5 cups of rice. Send \"clear\" to clear your request. Send \"show\" to see who has requested rice so far.")
+                        elif re.match("rice \d+(\.\d+)?", message_text):
+                            amt = float(message_text.split())
+                            rice_req = RiceRequest('nmae???', amt)
+                            if RiceRequest.query.filter_by(name=asdf).first():
+                            db.session.add(rice_req)
+                            db.session.commit()
+                            send_message(sender_id, "got it! {} cups".format(amt))
                         elif message_text == "clear":
-                            if sender_id in RICE:
-                                del RICE[sender_id]
-                                send_message(sender_id, "okay, you don't want rice")
+                            rice_req = RiceRequest.query.filter_by(name=asdf).first()
+                            if rice_req:
+                                db.session.delete(rice_req)
+                                db.session.commit()
+                                send_message(sender_id, "your request was cleared")
                             else:
                                 send_message(sender_id, "you didn't request rice today")
                         elif message_text == "show":
-                            send_message(sender_id, "these people want rice: {}".format(RICE.keys()))
+                            send_message(sender_id, "these people want rice: {}".format(RiceRequest.query.all()))
                         else:
                             send_message(sender_id, "I don't understand")
 
