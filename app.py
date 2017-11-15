@@ -22,9 +22,10 @@ class RiceRequest(db.Model):
     sender_id = db.Column(db.String(30), unique=True)
     created_date = db.Column(db.DateTime, default=datetime.today)
 
-    def __init__(self, name, amount=0.):
+    def __init__(self, name, amount, sender_id):
         self.name = name
         self.amount = amount
+        self.sender_id = sender_id
 
     def __repr__(self):
         return "({}, {} cups)".format(self.name, self.amount)
