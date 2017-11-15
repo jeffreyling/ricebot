@@ -109,7 +109,7 @@ def webhook():
                             query_set = RiceRequest.query.filter(RiceRequest.created_date >= today).all()
                             send_message(sender_id, "these people want rice today: {}".format(query_set))
                         elif message_text == "make rice":
-                            rice_maker = RiceRequest.query.filter_by(sender_id=str(sender_id)).name
+                            rice_maker = RiceRequest.query.filter_by(sender_id=str(sender_id)).first().name
                             for req in RiceRequest.query.all():
                                 send_message(req.sender_id, "{} is making rice! your request was fulfilled :)".format(rice_maker))
 
