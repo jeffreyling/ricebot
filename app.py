@@ -73,6 +73,8 @@ def webhook():
 
                     if "text" in messaging_event["message"]:  # prevent emojis from crashing us
                         message_text = messaging_event["message"]["text"]  # the message's text
+                        message_text = message_text.strip().lower()
+
                         if message_text == "help":
                             send_message(sender_id,
                             "Send \"rice 1.5\" to post 1.5 cups of rice.\nSend \"clear\" to clear your request.\nSend \"show\" to see who has requested rice so far.\nYou can clear your last request with a new one too.")
