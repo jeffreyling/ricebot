@@ -19,6 +19,7 @@ class RiceRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True)
     amount = db.Column(db.Float())  # in cups
+    sender_id = db.Column(db.String(30), unique=True)
     created_date = db.Column(db.DateTime, default=datetime.today)
 
     def __init__(self, name, amount=0.):
@@ -77,25 +78,25 @@ def webhook():
 
                         if message_text == "help":
                             send_message(sender_id,
-                            "Send \"rice 1.5\" to post 1.5 cups of rice.\nSend \"clear\" to clear your request.\nSend \"show\" to see who has requested rice so far.\nYou can clear your last request with a new one too.")
+                            "Send \"rice 1.5\" to post 1.5 cups of rice.\nSend \"clear\" to clear your request.\nSend \"show\" to see who has requested rice so far.\nYou can clear your last request with a new one too.\nSend \"make rice\" when you're making rice to clear all current requests!")
                         elif re.match("rice \d+(\.\d+)?", message_text):
                             amt = float(message_text.strip().split()[-1])
-                            prev_req = RiceRequest.query.filter_by(name=first_name).first()
+                            prev_req = RiceRequest.query.filter_by(sender_id=str(sender_id)).first()
                             if prev_req:
                                 db.session.delete(prev_req)
                                 db.session.commit()
-                                rice_req = RiceRequest(first_name, amt)
+                                rice_req = RiceRequest(first_name, amt, str(sender_id))
                                 db.session.add(rice_req)
                                 db.session.commit()
                                 send_message(sender_id, "new request: {} cups".format(amt))
                             else:
-                                rice_req = RiceRequest(first_name, amt)
+                                rice_req = RiceRequest(first_name, amt, str(sender_id))
                                 db.session.add(rice_req)
                                 db.session.commit()
                                 send_message(sender_id, "got it! {} cups".format(amt))
 
                         elif message_text == "clear":
-                            rice_req = RiceRequest.query.filter_by(name=first_name).first()
+                            rice_req = RiceRequest.query.filter_by(sender_id=str(sender_id)).first()
                             if rice_req:
                                 db.session.delete(rice_req)
                                 db.session.commit()
@@ -106,8 +107,15 @@ def webhook():
                             today = datetime.today().date()
                             query_set = RiceRequest.query.filter(RiceRequest.created_date >= today).all()
                             send_message(sender_id, "these people want rice today: {}".format(query_set))
+                        elif message_text == "make rice":
+                            rice_maker = RiceRequest.query.filter_by(sender_id=str(sender_id)).name
+                            for req in RiceRequest.query.all():
+                                send_message(req.sender_id, "{} is making rice! your request was fulfilled :)".format(rice_maker))
+
+                            # Clear all requests
+                            RiceRequest.query.delete()
                         else:
-                            send_message(sender_id, "I don't understand")
+                            send_message(sender_id, "I don't understand... type \"help\"")
 
                 if messaging_event.get("delivery"):  # delivery confirmation
                     pass
